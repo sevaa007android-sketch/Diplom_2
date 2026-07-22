@@ -1,25 +1,26 @@
 import pytest
+from api.client import StellarBurgersClient
 from helpers import generate_user_data
-from api.user_api import register_user, delete_user
-from api.ingredients_api import get_ingredients
+
 
 @pytest.fixture
-def new_user_data():
-    return generate_user_data()
+def client():
+    return StellarBurgersClient()
+
 
 @pytest.fixture
-def created_user(new_user_data):
-    user_data = new_user_data
-    response = register_user(user_data)
-    token = response.json()["accessToken"]
+def created_user(client):
+    user_data = generate_user_data()
+    response = client.register(user_data)
+    token = response.json().get("accessToken")
     yield user_data, token
-    delete_user(token)
+    client.delete_user(token)
+
 
 @pytest.fixture
-def ingredient_ids():
-    response = get_ingredients()
+def ingredient_ids(client):
+    response = client.get_ingredients()
     data = response.json()
-    # Берём первые два ID из списка ингредиентов
     ingredients = data.get("data", [])
     ids = [ing["_id"] for ing in ingredients[:2]]
     return ids
